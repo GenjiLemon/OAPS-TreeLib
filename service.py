@@ -366,8 +366,11 @@ def get_subject(subjectID):
 # ============================================================================================
 @app.before_request
 def before_request():
-    ip = IP
-    session['ip'] = ip
+    if request.headers.getlist("X-Forwarded-For"):
+        ip = request.headers.getlist("X-Forwarded-For")[0]
+    else:
+        ip = request.remote_addr
+    session['ip']=ip
     visitor = Visitor.query.filter_by(ip=ip).first()
     if visitor is None:
         visitor = Visitor(ip=ip)
@@ -394,7 +397,9 @@ def before_request():
                 visitvote = VisitVote(visitor_id=visitor.id, article_id=article_id)
                 db.session.add(visitvote)
                 db.session.add(article)
-
+@app.route('/testip')
+def testip():
+    return session.get('ip')
 
 # ============================================================================================#
 #                                         index                                               #
